@@ -19,7 +19,7 @@ common stanzas
 
 library
     import:          stanzas
-    exposed-modules: MyLib
+    exposed-modules: Hermeneutics.Grammar
     -- other-modules:
     -- other-extensions:
     build-depends:   base ^>=4.21.0.0
