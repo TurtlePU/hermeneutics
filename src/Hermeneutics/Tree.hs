@@ -5,6 +5,7 @@ import GHC.Generics ((:.:) (..))
 import GHC.TypeNats (type (+))
 import Hermeneutics.Grammar (Grammar, gmap)
 import Control.Category ((<<<))
+import Data.Bifunctor (Bifunctor, bimap)
 
 --------------------------------------------------------------------------------
 
@@ -34,6 +35,15 @@ instance Functor f => Tensor (Alg f) where
     MkAlg a >>>= f = MkAlg $ fmap (>>= f) a
 
 type Free f = Tree (Alg f)
+
+--------------------------------------------------------------------------------
+
+newtype BiScoped b m a = MkBiScoped { runBiScoped :: b (m (Maybe a)) (m a) }
+
+instance Bifunctor b => Tensor (BiScoped b) where
+    MkBiScoped b >>>= f = MkBiScoped $ bimap (>>= traverse f) (>>= f) b
+
+type Foil b = Tree (BiScoped b)
 
 --------------------------------------------------------------------------------
 
