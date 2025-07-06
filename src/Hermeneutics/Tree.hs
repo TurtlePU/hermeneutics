@@ -50,22 +50,21 @@ type Free f = Tree ((:.:) f)
 
 --------------------------------------------------------------------------------
 
-newtype BiScoped b m a = MkBiScoped { runBiScoped :: b (m (Maybe a)) (m a) }
+newtype BiScoped b m a = MkBiScoped { runBiScoped :: b ((:.:) m Maybe a) (m a) }
 
 instance (Bifunctor b, Functor f) => Functor (BiScoped b f) where
-    fmap f = MkBiScoped . bimap (fmap f <$>) (fmap f) . runBiScoped
+    fmap f = MkBiScoped . bimap (fmap f) (fmap f) . runBiScoped
 
 instance Bifunctor b => Tensor (BiScoped b) where
-    MkBiScoped b >>>= f = MkBiScoped $ bimap (>>= traverse f) (>>= f) b
+    MkBiScoped b >>>= f =
+        MkBiScoped $ bimap (Comp1 <<< traverse f <=< unComp1) (>>= f) b
 
 instance (Bifoldable b, Foldable f) => Foldable (BiScoped b f) where
-    foldMap f = bifoldMap (foldMap (foldMap f)) (foldMap f) . runBiScoped
+    foldMap f = bifoldMap (foldMap f) (foldMap f) . runBiScoped
 
 instance (Bitraversable b, Traversable f) => Traversable (BiScoped b f) where
     traverse f =
-        fmap MkBiScoped
-        . bitraverse (traverse (traverse f)) (traverse f)
-        . runBiScoped
+        fmap MkBiScoped . bitraverse (traverse f) (traverse f) . runBiScoped
 
 type Foil b = Tree (BiScoped b)
 
@@ -75,29 +74,29 @@ data Fin n where
     FZ :: Fin (n + 1)
     FS :: Fin n -> Fin (n + 1)
 
-newtype Scope a n = MkScope { runScope :: Either (Fin n) a }
+newtype Scope m a n = MkScope { runScope :: (:.:) m (Either (Fin n)) a }
 
-newtype Scoped g m a = MkScoped { runScoped :: g (m :.: Scope a) }
+unScope :: Scope m a n -> m (Either (Fin n) a)
+unScope = unComp1 . runScope
+
+scope :: m (Either (Fin n) a) -> Scope m a n
+scope = MkScope . Comp1
+
+newtype Scoped g m a = MkScoped { runScoped :: g (Scope m a) }
 
 instance (Grammar g, Functor f) => Functor (Scoped g f) where
-    fmap f =
-        MkScoped
-        . gmap (Comp1 . fmap (MkScope . fmap f . runScope) . unComp1)
-        . runScoped
+    fmap f = MkScoped . gmap (MkScope . fmap f . runScope) . runScoped
 
 instance Grammar g => Tensor (Scoped g) where
-    MkScoped g >>>= f = MkScoped $
-        gmap (Comp1 <<< fmap MkScope . traverse f . runScope <=< unComp1) g
+    MkScoped g >>>= f = MkScoped $ gmap (scope <<< traverse f <=< unScope) g
 
 instance (GFoldable g, Foldable f) => Foldable (Scoped g f) where
-    foldMap f = gfoldMap (foldMap (foldMap f . runScope) . unComp1) . runScoped
+    foldMap f = gfoldMap (foldMap f . runScope) . runScoped
 
 instance (GTraversable g, Traversable f) => Traversable (Scoped g f) where
     traverse f =
         fmap MkScoped
-        . gtraverse (fmap Comp1
-                     . traverse (fmap MkScope . traverse f . runScope)
-                     . unComp1)
+        . gtraverse (fmap MkScope . traverse f . runScope)
         . runScoped
 
 type Term g = Tree (Scoped g)
