@@ -10,7 +10,7 @@ maintainer:         sokolov.p64@gmail.com
 -- copyright:
 category:           Language
 build-type:         Simple
-extra-doc-files:    CHANGELOG.md
+extra-doc-files:    CHANGELOG.md, README.md
 -- extra-source-files:
 
 common stanzas
@@ -19,7 +19,10 @@ common stanzas
 
 library
     import:          stanzas
-    exposed-modules: Hermeneutics.Grammar
+    exposed-modules:
+        Hermeneutics.Grammar
+        Hermeneutics.GFoldable
+        Hermeneutics.GTraversable
     -- other-modules:
     -- other-extensions:
     build-depends:   base ^>=4.21.0.0
