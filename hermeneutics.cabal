@@ -20,6 +20,7 @@ common stanzas
 library
     import:          stanzas
     exposed-modules:
+        Hermeneutics.Apply
         Hermeneutics.Grammar
         Hermeneutics.GFoldable
         Hermeneutics.GTraversable
