@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Hermeneutics.Tree where
 
 import Control.Monad (ap, liftM, (<=<))
@@ -6,6 +8,8 @@ import GHC.TypeNats (type (+))
 import Hermeneutics.Grammar (Grammar, gmap)
 import Control.Category ((<<<))
 import Data.Bifunctor (Bifunctor, bimap)
+import Data.Bifoldable (Bifoldable, bifoldMap)
+import Hermeneutics.GFoldable (GFoldable, gfoldMap)
 
 --------------------------------------------------------------------------------
 
@@ -27,14 +31,16 @@ instance Tensor t => Monad (Tree t) where
     Leaf a >>= f = f a
     Node n >>= f = Node (n >>>= f)
 
+instance Foldable (t (Tree t)) => Foldable (Tree t) where
+    foldMap f (Leaf a) = f a
+    foldMap f (Node n) = foldMap f n
+
 --------------------------------------------------------------------------------
 
-newtype Alg f m a = MkAlg { runAlg :: f (m a) }
+instance Functor f => Tensor ((:.:) f) where
+    Comp1 a >>>= f = Comp1 $ fmap (>>= f) a
 
-instance Functor f => Tensor (Alg f) where
-    MkAlg a >>>= f = MkAlg $ fmap (>>= f) a
-
-type Free f = Tree (Alg f)
+type Free f = Tree ((:.:) f)
 
 --------------------------------------------------------------------------------
 
@@ -42,6 +48,9 @@ newtype BiScoped b m a = MkBiScoped { runBiScoped :: b (m (Maybe a)) (m a) }
 
 instance Bifunctor b => Tensor (BiScoped b) where
     MkBiScoped b >>>= f = MkBiScoped $ bimap (>>= traverse f) (>>= f) b
+
+instance (Bifoldable b, Foldable f) => Foldable (BiScoped b f) where
+    foldMap f = bifoldMap (foldMap (foldMap f)) (foldMap f) . runBiScoped
 
 type Foil b = Tree (BiScoped b)
 
@@ -58,5 +67,8 @@ newtype Scoped g m a = MkScoped { runScoped :: g (m :.: Scope a) }
 instance Grammar g => Tensor (Scoped g) where
     MkScoped g >>>= f = MkScoped $
         gmap (Comp1 <<< fmap MkScope . traverse f . runScope <=< unComp1) g
+
+instance (GFoldable g, Foldable f) => Foldable (Scoped g f) where
+    foldMap f = gfoldMap (foldMap (foldMap f . runScope) . unComp1) . runScoped
 
 type Term g = Tree (Scoped g)
