@@ -24,7 +24,7 @@ library
         Hermeneutics.Grammar
         Hermeneutics.GFoldable
         Hermeneutics.GTraversable
-        Hermeneutics.Multisorted.Grammar
+        Hermeneutics.Multisorted
         Hermeneutics.Tree
     -- other-modules:
     -- other-extensions:
