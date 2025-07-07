@@ -18,14 +18,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download and run stylish-haskell
+      - name: Download stylish-haskell
         env:
           version: '0.15.1.0'
           toolname: stylish-haskell-v0.15.1.0-linux-x86_64
         run: |
           curl -L https://github.com/haskell/stylish-haskell/releases/download/v$version/$toolname.tar.gz
-          tar -xf $toolname.tar.gz && chmod +x $toolname/stylish-haskell
+
+      - name: Unpack stylish-haskell
+        env:
+          version: '0.15.1.0'
+          toolname: stylish-haskell-v0.15.1.0-linux-x86_64
+        run: |
+          tar -xf $toolname.tar.gz
+
+      - name: ChMod stylish-haskell
+        env:
+          version: '0.15.1.0'
+          toolname: stylish-haskell-v0.15.1.0-linux-x86_64
+        run: |
+          chmod +x $toolname/stylish-haskell
+
+      - name: Run stylish-haskell
+        env:
+          version: '0.15.1.0'
+          toolname: stylish-haskell-v0.15.1.0-linux-x86_64
+        run: |
           git ls-files -z '*.hs' | xargs -P $$(nproc) -0 ./$toolname/stylish-haskell --inplace
+
+      - name: Remove stylish-haskell
+        env:
+          version: '0.15.1.0'
+          toolname: stylish-haskell-v0.15.1.0-linux-x86_64
+        run: |
           rm -rf $toolname & rm $toolname.tar.gz
 
       - name: Auto-commit format
