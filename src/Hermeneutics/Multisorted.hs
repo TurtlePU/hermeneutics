@@ -1,11 +1,11 @@
-{-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE QuantifiedConstraints #-}
 
 module Hermeneutics.Multisorted where
 
 import Data.List.NonEmpty (NonEmpty (..))
-import Hermeneutics.Grammar (Grammar (..))
 import GHC.Generics ((:+:) (..))
+import Hermeneutics.Grammar (Grammar (..))
 
 --------------------------------------------------------------------------------
 

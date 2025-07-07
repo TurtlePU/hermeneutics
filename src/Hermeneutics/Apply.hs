@@ -1,7 +1,7 @@
 module Hermeneutics.Apply where
 
-import Hermeneutics.GFoldable    (GFoldable (..))
-import Hermeneutics.Grammar      (Grammar (..))
+import Hermeneutics.GFoldable (GFoldable (..))
+import Hermeneutics.Grammar (Grammar (..))
 import Hermeneutics.GTraversable (GTraversable (..))
 
 newtype (:&:) x f = Apply { runApply :: f x }

@@ -2,15 +2,15 @@
 
 module Hermeneutics.Tree where
 
+import Control.Category ((<<<))
 import Control.Monad (ap, liftM, (<=<))
+import Data.Bifoldable (Bifoldable, bifoldMap)
+import Data.Bifunctor (Bifunctor, bimap)
+import Data.Bitraversable (Bitraversable, bitraverse)
 import GHC.Generics ((:.:) (..))
 import GHC.TypeNats (type (+))
-import Hermeneutics.Grammar (Grammar, gmap)
-import Control.Category ((<<<))
-import Data.Bifunctor (Bifunctor, bimap)
-import Data.Bifoldable (Bifoldable, bifoldMap)
 import Hermeneutics.GFoldable (GFoldable, gfoldMap)
-import Data.Bitraversable (Bitraversable, bitraverse)
+import Hermeneutics.Grammar (Grammar, gmap)
 import Hermeneutics.GTraversable (GTraversable, gtraverse)
 
 --------------------------------------------------------------------------------

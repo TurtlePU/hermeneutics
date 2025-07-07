@@ -4,7 +4,7 @@ module Hermeneutics.GTraversable where
 
 import GHC.Generics
 import Hermeneutics.GFoldable (GFoldable)
-import Hermeneutics.Grammar   (Grammar)
+import Hermeneutics.Grammar (Grammar)
 
 class (Grammar g, GFoldable g) => GTraversable g where
     gtraverse :: Applicative f => (forall i. a i -> f (b i)) -> g a -> f (g b)
