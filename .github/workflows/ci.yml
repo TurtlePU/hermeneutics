@@ -21,12 +21,11 @@ jobs:
       - name: Download and run stylish-haskell
         env:
           version: '0.15.1.0'
-          toolname: stylish-haskell-v$version-linux-x86_64
-          command: $toolname/stylish-haskell
+          toolname: stylish-haskell-v0.15.1.0-linux-x86_64
         run: |
           curl -L https://github.com/haskell/stylish-haskell/releases/download/v$version/$toolname.tar.gz
-          tar -xf $toolname.tar.gz && chmod +x $command
-          git ls-files -z '*.hs' | xargs -P $$(nproc) -0 ./$command --inplace
+          tar -xf $toolname.tar.gz && chmod +x $toolname/stylish-haskell
+          git ls-files -z '*.hs' | xargs -P $$(nproc) -0 ./$toolname/stylish-haskell --inplace
           rm -rf $toolname & rm $toolname.tar.gz
 
       - name: Auto-commit format
