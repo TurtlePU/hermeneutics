@@ -23,14 +23,14 @@ jobs:
           version: '0.15.1.0'
           toolname: stylish-haskell-v0.15.1.0-linux-x86_64
         run: |
-          curl -L https://github.com/haskell/stylish-haskell/releases/download/v$version/$toolname.tar.gz
+          curl -L https://github.com/haskell/stylish-haskell/releases/download/v$version/$toolname.tar.gz -o shs.tar.gz
 
       - name: Unpack stylish-haskell
         env:
           version: '0.15.1.0'
           toolname: stylish-haskell-v0.15.1.0-linux-x86_64
         run: |
-          tar -xf $toolname.tar.gz
+          tar -xf shs.tar.gz
 
       - name: ChMod stylish-haskell
         env:
