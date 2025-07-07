@@ -1,8 +1,15 @@
 cabal-version:      3.0
 name:               hermeneutics
 version:            0.1.0.0
--- synopsis:
--- description:
+synopsis:
+    A language workbench for easier writing of new programming languages
+    in Haskell.
+description:
+    A collection of useful definitions, typeclasses and Template Haskell
+    functions to get you up and running to write your own programming language.
+    In the future, the package shall include tools to easily define grammars,
+    parsers, typecheckers, language servers, optimizers and code generators, all
+    inside modern Haskell: no separate build steps, no weird DSLs.
 license:            BSD-3-Clause
 license-file:       LICENSE
 author:             TurtlePU
@@ -13,8 +20,21 @@ build-type:         Simple
 extra-doc-files:    CHANGELOG.md, README.md
 -- extra-source-files:
 
+source-repository head
+    type:     git
+    location: https://github.com/TurtlePU/hermeneutics
+
+flag dev
+    description:
+        Additional options for development.
+        Enter `$ cabal v2-configure -f dev` to turn on.
+    manual:      True
+    default:     False
+
 common stanzas
-    ghc-options:      -Wall -Werror
+    ghc-options:      -Wall
+    if flag(dev)
+        ghc-options:  -Werror
     default-language: GHC2024
     other-extensions: ImportQualifiedPost
 
