@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
+  stylish-haskell:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -33,6 +33,11 @@ jobs:
         with:
           commit_message: stylish-haskell auto-commit
 
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Set up HLint
         uses: haskell-actions/hlint-setup@v2
         with:
@@ -43,6 +48,37 @@ jobs:
         with:
           path: '["src/", "test/"]'
           fail-on: warning
+
+  build-wasm:
+    name: GHC 9.12 on WASM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore cached WASM toolchain
+        uses: actions/cache/restore@v4
+        id: wasm-cache
+        with:
+          key: wasm-toolchain
+          path: ~/.ghc-wasm
+
+      - name: Install WASM toolchain
+        if: steps.wasm-cache.outputs.cache-hit != 'true'
+        run: |
+          curl https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta/-/raw/master/bootstrap.sh | sh
+
+      - name: Save cached WASM toolchain
+        if: steps.wasm-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.ghc-wasm
+          key: ${{ steps.wasm-cache.outputs.cache-primary-key }}
+
+      - name: Configure & run WASM build
+        run: |
+          source ~/.ghc-wasm/env
+          ~/.ghc-wasm/add_to_github_path.sh
+          wasm32-wasi-cabal build all
 
   build:
     name: GHC ${{ matrix.ghc-version }} on ${{ matrix.os }}
