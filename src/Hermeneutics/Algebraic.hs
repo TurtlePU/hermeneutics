@@ -3,9 +3,9 @@
 module Hermeneutics.Algebraic where
 
 import Control.Monad.Trans.Cont (cont, runCont)
+import Data.Void (Void, absurd)
 import GHC.Generics (unComp1, (:.:))
 import Hermeneutics.Tree (Tree, evalTree)
-import Data.Void (Void, absurd)
 
 type Free f = Tree ((:.:) f)
 
