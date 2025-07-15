@@ -1,7 +1,7 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE QuantifiedConstraints #-}
 
-module Hermeneutics.ManySorted.WellScoped where
+module Hermeneutics.WellScoped where
 
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics ((:+:) (..))
