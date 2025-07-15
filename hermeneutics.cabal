@@ -42,13 +42,15 @@ library
     import:          stanzas
     exposed-modules:
         Hermeneutics.Apply
+        Hermeneutics.Functor1
         Hermeneutics.Grammar
         Hermeneutics.GFoldable
         Hermeneutics.GTraversable
         Hermeneutics.Multisorted
         Hermeneutics.Tree
+        Hermeneutics.Value
     -- other-modules:
-    build-depends:   base ^>=4.21.0.0
+    build-depends:   base ^>=4.21.0.0, transformers
     hs-source-dirs:  src
 
 test-suite hermeneutics-test
