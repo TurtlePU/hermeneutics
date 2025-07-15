@@ -44,11 +44,14 @@ library
         Hermeneutics.Algebraic
         Hermeneutics.Apply
         Hermeneutics.Bound
+        Hermeneutics.Bound1
         Hermeneutics.Functor1
         Hermeneutics.Grammar
         Hermeneutics.GFoldable
         Hermeneutics.GTraversable
-        Hermeneutics.Multisorted
+        Hermeneutics.ManySorted.Algebraic
+        Hermeneutics.ManySorted.WellScoped
+        Hermeneutics.ManySorted.Tree
         Hermeneutics.WellScoped
         Hermeneutics.WellScoped.Simple
         Hermeneutics.Tree
