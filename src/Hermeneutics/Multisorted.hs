@@ -5,15 +5,14 @@ module Hermeneutics.Multisorted where
 
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics ((:+:) (..))
+import Hermeneutics.Functor1 (Functor1 (..), type (~>))
 import Hermeneutics.Grammar (Grammar (..))
 
 --------------------------------------------------------------------------------
 
 data Tree t g v s = Leaf (v s) | Node (g s (t (Tree t g) v))
 
-type f ~> g = forall a. f a -> g a
-
-class Monad1 m where
+class Functor1 m => Monad1 m where
     unit1 :: a ~> m a
     bind1 :: (a ~> m b) -> (m a ~> m b)
 
@@ -22,6 +21,9 @@ m =>> f = bind1 f m
 
 class Tensor1 t where
     lift1 :: Monad1 m => (a ~> m b) -> (t m a ~> t m b)
+
+instance (Tensor1 t, forall s. Grammar (g s)) => Functor1 (Tree t g) where
+    fmap1 f = bind1 (unit1 . f)
 
 instance (Tensor1 t, forall s. Grammar (g s)) => Monad1 (Tree t g) where
     unit1 = Leaf
