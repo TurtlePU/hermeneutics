@@ -1,9 +1,9 @@
 module Hermeneutics.Value where
 
-import Data.Void (Void, absurd)
-import Hermeneutics.Tree
 import Data.Bifunctor (Bifunctor)
+import Data.Void (Void, absurd)
 import Hermeneutics.Grammar (Grammar)
+import Hermeneutics.Tree
 
 type Closed f = f Void
 
