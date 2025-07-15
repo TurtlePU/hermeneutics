@@ -41,22 +41,15 @@ common stanzas
 library
     import:          stanzas
     exposed-modules:
-        Hermeneutics.Algebraic
         Hermeneutics.Apply
-        Hermeneutics.Bound
-        Hermeneutics.Bound1
         Hermeneutics.Functor1
-        Hermeneutics.Grammar
         Hermeneutics.GFoldable
+        Hermeneutics.Grammar
         Hermeneutics.GTraversable
-        Hermeneutics.ManySorted.Algebraic
         Hermeneutics.ManySorted.WellScoped
-        Hermeneutics.ManySorted.Tree
-        Hermeneutics.WellScoped
-        Hermeneutics.WellScoped.Simple
-        Hermeneutics.Tree
+        Hermeneutics.Monad1
     -- other-modules:
-    build-depends:   base ^>=4.21.0.0, transformers
+    build-depends:   base ^>=4.21.0.0
     hs-source-dirs:  src
 
 test-suite hermeneutics-test
