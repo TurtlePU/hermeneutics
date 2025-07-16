@@ -42,6 +42,7 @@ library
     import:          stanzas
     exposed-modules:
         Hermeneutics.Encoding.WellScoped
+        Hermeneutics.Flavours.FirstOrder
         Hermeneutics.Flavours.ManySorted
         Hermeneutics.Flavours.NthOrder
         Hermeneutics.Flavours.SecondOrder
