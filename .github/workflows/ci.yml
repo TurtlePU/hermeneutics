@@ -133,4 +133,9 @@ jobs:
         run: cabal check
 
       - name: Build documentation
-        run: cabal haddock all --disable-documentation
+        run: |
+          output=$(cabal haddock all --disable-documentation)
+          echo $output
+          if echo $output | grep Missing
+          then exit 1
+          fi
