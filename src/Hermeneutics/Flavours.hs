@@ -1,4 +1,4 @@
-module Hermeneutics.Functors where
+module Hermeneutics.Flavours where
 
 import GHC.Generics ((:.:) (..))
 

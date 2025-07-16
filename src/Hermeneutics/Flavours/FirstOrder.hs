@@ -1,7 +1,7 @@
 module Hermeneutics.Flavours.FirstOrder where
 
 import Data.List.NonEmpty (NonEmpty (..))
-import Hermeneutics.Functors (HFunctor (..))
+import Hermeneutics.Flavours (HFunctor (..))
 
 newtype FirstOrder f v s = FstOrder { fstOrder :: f (v (s :| '[])) }
 

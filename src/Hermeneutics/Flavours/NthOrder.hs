@@ -7,7 +7,7 @@ module Hermeneutics.Flavours.NthOrder where
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics
 import GHC.TypeNats (type (-))
-import Hermeneutics.Functors (HFunctor (..), type (~>))
+import Hermeneutics.Flavours (HFunctor (..), type (~>))
 
 class DFunctor g where
     dmap :: (a ~> b) -> g a -> g b

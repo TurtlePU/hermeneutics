@@ -5,7 +5,7 @@ module Hermeneutics.Encoding.WellScoped where
 
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics ((:+:) (..))
-import Hermeneutics.Functors (HFunctor (..), HMonad (..), type (~>))
+import Hermeneutics.Flavours (HFunctor (..), HMonad (..), type (~>))
 
 data In ts t where
     Here :: In (t : ts) t

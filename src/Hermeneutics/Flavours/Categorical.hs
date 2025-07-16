@@ -1,7 +1,7 @@
 module Hermeneutics.Flavours.Categorical where
 
 import Data.List.NonEmpty (NonEmpty (..))
-import Hermeneutics.Functors (type (~>), HFunctor (..))
+import Hermeneutics.Flavours (type (~>), HFunctor (..))
 
 type c ~~> d = forall i j. c i j -> d i j
 

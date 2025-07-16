@@ -2,7 +2,7 @@ module Hermeneutics.Flavours.SecondOrder where
 
 import Data.List.NonEmpty (NonEmpty(..))
 import Data.Bifunctor (Bifunctor, bimap)
-import Hermeneutics.Functors (HFunctor (..))
+import Hermeneutics.Flavours (HFunctor (..))
 
 newtype SecondOrder b v s =
     SndOrder { sndOrder :: b (v (s :| '[s])) (v (s :| '[])) }

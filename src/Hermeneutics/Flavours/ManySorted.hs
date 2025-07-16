@@ -1,7 +1,7 @@
 module Hermeneutics.Flavours.ManySorted where
 
 import Data.List.NonEmpty (NonEmpty (..))
-import Hermeneutics.Functors (HFunctor (..))
+import Hermeneutics.Flavours (HFunctor (..))
 
 newtype SApp v s = MkSApp { runSApp :: v (s :| '[]) }
 
