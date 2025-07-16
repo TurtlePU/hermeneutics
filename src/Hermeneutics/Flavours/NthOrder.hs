@@ -7,7 +7,6 @@ module Hermeneutics.Flavours.NthOrder where
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics
 import GHC.TypeNats (type (-))
-import Hermeneutics.Flavours.SecondOrder (Singleton (..))
 import Hermeneutics.Functors (HFunctor (..), type (~>))
 
 class DFunctor g where
@@ -97,13 +96,13 @@ instance DTraversable ((:&:) x) where dtraverse f = fmap Apply . f . runApply
 
 --------------------------------------------------------------------------------
 
-type family RepeatSort n where
-    RepeatSort 0 = '[]
-    RepeatSort n = Sort : RepeatSort (n - 1)
+type family Repeat s n where
+    Repeat _ 0 = '[]
+    Repeat s n = s : Repeat s (n - 1)
 
-newtype NApp v n = MkNApp { runNApp :: v (Sort :| RepeatSort n) }
+newtype NApp v s n = MkNApp { runNApp :: v (s :| Repeat s n) }
 
-newtype NthOrder g v s = MkNthOrder { runNthOrder :: g (NApp v) }
+newtype NthOrder g v s = MkNthOrder { runNthOrder :: g (NApp v s) }
 
 instance DFunctor g => HFunctor (NthOrder g) where
     hmap f = MkNthOrder . dmap (MkNApp . f . runNApp) . runNthOrder
