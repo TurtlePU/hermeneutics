@@ -133,13 +133,7 @@ jobs:
         run: cabal check
 
       - name: Build documentation
-        id: haddock
-        env:
-          cmd: cabal haddock all --disable-documentation
+        shell: bash
         run: |
-          ${{ env.cmd }}
-          echo "missing=$(${{ env.cmd }} | grep Missing -m 1)" >> $GITHUB_OUTPUT
-
-      - name: Check documentation coverage
-        if: ${{ steps.haddock.outputs.missing }}
-        run: exit 1
+          cabal haddock all --disable-documentation
+          exit ${#$(!! | grep Missing)}
