@@ -7,6 +7,7 @@ module Hermeneutics.Flavours.NthOrder where
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics
 import GHC.TypeNats (type (-))
+import Hermeneutics.Flavours.SecondOrder (Singleton (..))
 import Hermeneutics.Functors (HFunctor (..), type (~>))
 
 class DFunctor g where
@@ -95,8 +96,6 @@ instance DFoldable ((:&:) x) where dfoldMap f = f . runApply
 instance DTraversable ((:&:) x) where dtraverse f = fmap Apply . f . runApply
 
 --------------------------------------------------------------------------------
-
-data Singleton = Sort
 
 type family RepeatSort n where
     RepeatSort 0 = '[]
