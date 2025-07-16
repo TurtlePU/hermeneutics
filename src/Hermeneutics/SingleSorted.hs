@@ -7,7 +7,7 @@ module Hermeneutics.SingleSorted where
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics
 import GHC.TypeNats (type (-))
-import Hermeneutics.Functor1 (Functor1 (..))
+import Hermeneutics.Functors (Functor1 (..))
 
 class Grammar g where
     gmap :: (forall i. a i -> b i) -> g a -> g b

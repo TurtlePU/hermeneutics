@@ -5,8 +5,7 @@ module Hermeneutics.WellScoped where
 
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics ((:+:) (..))
-import Hermeneutics.Functor1 (Functor1, fmap1, type (~>))
-import Hermeneutics.Monad1 (Monad1 (..), unit1)
+import Hermeneutics.Functors (Functor1 (..), Monad1 (..), type (~>))
 
 data In ts t where
     Here :: In (t : ts) t

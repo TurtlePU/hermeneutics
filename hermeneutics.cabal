@@ -41,8 +41,7 @@ common stanzas
 library
     import:          stanzas
     exposed-modules:
-        Hermeneutics.Functor1
-        Hermeneutics.Monad1
+        Hermeneutics.Functors
         Hermeneutics.SingleSorted
         Hermeneutics.WellScoped
     -- other-modules:
