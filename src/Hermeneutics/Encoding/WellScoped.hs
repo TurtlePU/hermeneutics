@@ -5,7 +5,7 @@ module Hermeneutics.Encoding.WellScoped where
 
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics ((:+:) (..))
-import Hermeneutics.Flavours (HFunctor (..), HMonad (..), type (~>))
+import Hermeneutics.Flavours
 
 data In ts t where
     Here :: In (t : ts) t
@@ -42,11 +42,25 @@ instance HFunctor g => HFunctor (Scoped g) where
 instance HFunctor g => HMonad (Scoped g) where
     hpure = Leaf
     hbind f (Leaf x) = f x
-    hbind f (Node g) = Node (hmap (\(MkExt c s) ->
-        MkExt c (hbind (\case
+    hbind f (Node g) = Node (hmap (\(MkExt c s) -> MkExt c (hbind (\case
             L1 i -> hpure (L1 i)
             R1 v -> hmap R1 (f v)
         ) s)) g)
+
+instance HFoldable g => HFoldable (Scoped g) where
+    hfoldMap f (Leaf x) = f x
+    hfoldMap f (Node g) = hfoldMap (\(MkExt _ s) -> hfoldMap (\case
+            L1 _ -> mempty
+            R1 v -> f v
+        ) s) g
+
+instance HTraversable g => HTraversable (Scoped g) where
+    htraverse f (Leaf x) = Leaf <$> f x
+    htraverse f (Node g) = Node <$> htraverse (\(MkExt c s) ->
+        MkExt c <$> htraverse (\case
+            L1 i -> pure (L1 i)
+            R1 v -> R1 <$> f v
+        ) s) g
 
 data NAry w ts where
     ZAry :: w s -> NAry w (s :| '[])

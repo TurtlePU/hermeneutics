@@ -7,7 +7,7 @@ module Hermeneutics.Flavours.NthOrder where
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics
 import GHC.TypeNats (type (-))
-import Hermeneutics.Flavours (HFunctor (..), type (~>))
+import Hermeneutics.Flavours
 
 class DFunctor g where
     dmap :: (a ~> b) -> g a -> g b
@@ -35,10 +35,9 @@ instance DFunctor g => DFunctor (Rec1 g)
 --------------------------------------------------------------------------------
 
 class DFoldable g where
-    dfoldMap :: Monoid m => (forall i. a i -> m) -> g a -> m
+    dfoldMap :: Monoid m => (a /> m) -> g a -> m
     default dfoldMap ::
-        (Generic1 g, DFoldable (Rep1 g), Monoid m) =>
-        (forall i. a i -> m) -> g a -> m
+        (Generic1 g, DFoldable (Rep1 g), Monoid m) => (a /> m) -> g a -> m
     dfoldMap f = dfoldMap f . from1
 
 instance DFoldable (K1 i c) where
@@ -62,10 +61,10 @@ instance DFoldable g => DFoldable (Rec1 g)
 --------------------------------------------------------------------------------
 
 class (DFunctor g, DFoldable g) => DTraversable g where
-    dtraverse :: Applicative f => (forall i. a i -> f (b i)) -> g a -> f (g b)
+    dtraverse :: Applicative f => Klei f a b -> g a -> f (g b)
     default dtraverse ::
         (Generic1 g, DTraversable (Rep1 g), Applicative f) =>
-        (forall i. a i -> f (b i)) -> g a -> f (g b)
+        Klei f a b -> g a -> f (g b)
     dtraverse f = fmap to1 . dtraverse f . from1
 
 instance DTraversable (K1 i c) where
@@ -106,3 +105,10 @@ newtype NthOrder g v s = MkNthOrder { runNthOrder :: g (NApp v s) }
 
 instance DFunctor g => HFunctor (NthOrder g) where
     hmap f = MkNthOrder . dmap (MkNApp . f . runNApp) . runNthOrder
+
+instance DFoldable g => HFoldable (NthOrder g) where
+    hfoldMap f = dfoldMap (f . runNApp) . runNthOrder
+
+instance DTraversable g => HTraversable (NthOrder g) where
+    htraverse f =
+        fmap MkNthOrder . dtraverse (fmap MkNApp . f . runNApp) . runNthOrder
