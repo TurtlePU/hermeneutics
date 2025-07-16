@@ -41,9 +41,10 @@ common stanzas
 library
     import:          stanzas
     exposed-modules:
+        Hermeneutics.Encoding.WellScoped
+        Hermeneutics.Flavours.ManySorted
+        Hermeneutics.Flavours.NthOrder
         Hermeneutics.Functors
-        Hermeneutics.SingleSorted
-        Hermeneutics.WellScoped
     -- other-modules:
     build-depends:   base ^>=4.21.0.0
     hs-source-dirs:  src
