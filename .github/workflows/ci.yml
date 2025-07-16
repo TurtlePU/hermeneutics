@@ -138,4 +138,4 @@ jobs:
           cmd: cabal haddock all --disable-documentation
         run: |
           ${{ env.cmd }}
-          exit ${#$(${{ env.cmd }} | grep Missing)}
+          if ${{ env.cmd }} | grep Missing; then exit 1; fi
