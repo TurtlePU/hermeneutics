@@ -134,8 +134,6 @@ jobs:
 
       - name: Build documentation
         shell: bash
-        env:
-          cmd: cabal haddock all --disable-documentation
         run: |
-          ${{ env.cmd }}
-          if ${{ env.cmd }} | grep Missing; then exit 1; fi
+          cabal haddock all --disable-documentation
+          if !! | grep Missing; then exit 1; fi
