@@ -1,11 +1,11 @@
 module Hermeneutics.Flavours.ManySorted where
 
 import Data.List.NonEmpty (NonEmpty (..))
-import Hermeneutics.Functors (Functor1 (..))
+import Hermeneutics.Functors (HFunctor (..))
 
 newtype SApp v s = MkSApp { runSApp :: v (s :| '[]) }
 
 newtype ManySorted g v s = MSorted { runMSorted :: g (SApp v) s }
 
-instance Functor1 g => Functor1 (ManySorted g) where
-    fmap1 f = MSorted . fmap1 (MkSApp . f . runSApp) . runMSorted
+instance HFunctor g => HFunctor (ManySorted g) where
+    hmap f = MSorted . hmap (MkSApp . f . runSApp) . runMSorted

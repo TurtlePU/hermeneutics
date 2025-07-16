@@ -4,12 +4,12 @@ import GHC.Generics ((:.:) (..))
 
 type f ~> g = forall a. f a -> g a
 
-class Functor1 t where
-    fmap1 :: (f ~> g) -> (t f ~> t g)
+class HFunctor t where
+    hmap :: (f ~> g) -> (t f ~> t g)
 
-instance Functor f => Functor1 ((:.:) f) where
-    fmap1 f = Comp1 . fmap f . unComp1
+instance Functor f => HFunctor ((:.:) f) where
+    hmap f = Comp1 . fmap f . unComp1
 
-class Functor1 m => Monad1 m where
-    unit1 :: a ~> m a
-    bind1 :: (a ~> m b) -> (m a ~> m b)
+class HFunctor m => HMonad m where
+    hpure :: a ~> m a
+    hbind :: (a ~> m b) -> (m a ~> m b)

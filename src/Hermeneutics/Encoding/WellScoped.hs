@@ -5,7 +5,7 @@ module Hermeneutics.Encoding.WellScoped where
 
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics ((:+:) (..))
-import Hermeneutics.Functors (Functor1 (..), Monad1 (..), type (~>))
+import Hermeneutics.Functors (HFunctor (..), HMonad (..), type (~>))
 
 data In ts t where
     Here :: In (t : ts) t
@@ -34,18 +34,18 @@ data Ext m v ts where
 -- | Multisorted grammars with bindings
 data Scoped g v s = Leaf (v s) | Node (g (Ext (Scoped g) v) s)
 
-instance Functor1 g => Functor1 (Scoped g) where
-    fmap1 f (Leaf x) = Leaf (f x)
-    fmap1 f (Node g) = Node (fmap1 (\(MkExt c s) ->
-        MkExt c (fmap1 (\case { L1 l -> L1 l; R1 r -> R1 (f r)}) s)) g)
+instance HFunctor g => HFunctor (Scoped g) where
+    hmap f (Leaf x) = Leaf (f x)
+    hmap f (Node g) = Node (hmap (\(MkExt c s) ->
+        MkExt c (hmap (\case { L1 l -> L1 l; R1 r -> R1 (f r)}) s)) g)
 
-instance Functor1 g => Monad1 (Scoped g) where
-    unit1 = Leaf
-    bind1 f (Leaf x) = f x
-    bind1 f (Node g) = Node (fmap1 (\(MkExt c s) ->
-        MkExt c (bind1 (\case
-            L1 i -> unit1 (L1 i)
-            R1 v -> fmap1 R1 (f v)
+instance HFunctor g => HMonad (Scoped g) where
+    hpure = Leaf
+    hbind f (Leaf x) = f x
+    hbind f (Node g) = Node (hmap (\(MkExt c s) ->
+        MkExt c (hbind (\case
+            L1 i -> hpure (L1 i)
+            R1 v -> hmap R1 (f v)
         ) s)) g)
 
 data NAry w ts where
@@ -53,13 +53,13 @@ data NAry w ts where
     SAry :: (w s -> NAry w (t :| ts)) -> NAry w (t :| s : ts)
 
 evalScoped ::
-    forall g v w. Functor1 g => (v ~> w) -> (g (NAry w) ~> w) -> Scoped g v ~> w
+    forall g v w. HFunctor g => (v ~> w) -> (g (NAry w) ~> w) -> Scoped g v ~> w
 evalScoped f _ (Leaf v) = f v
-evalScoped f i (Node g) = i (fmap1 (\(MkExt c e) -> run f c e) g)
+evalScoped f i (Node g) = i (hmap (\(MkExt c e) -> run f c e) g)
   where
     run ::
         (u ~> w) -> Counter ts ->
         Scoped g (In ts :+: u) s -> NAry w (s :| ts)
     run v CZ t = ZAry (evalScoped (in0 v) i t)
     run v (CS c) t = SAry \x ->
-        run (\case { This -> x; That y -> v y }) c (fmap1 in1 t)
+        run (\case { This -> x; That y -> v y }) c (hmap in1 t)
