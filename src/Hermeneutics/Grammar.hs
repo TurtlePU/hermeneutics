@@ -200,24 +200,32 @@ module Hermeneutics.Grammar where
 
 import GHC.Generics ((:.:) (..))
 
+-- | A shorthand for natural transformation between functors.
 type a ~> b = forall i. a i -> b i
 
+-- | A shorthand for natural functor consumer.
 type a /> b = forall i. a i -> b
 
+-- | A shorthand for natural Kleisli transformation between functors.
 type Klei f a b = forall i. a i -> f (b i)
 
+-- | A generalization of 'Functor's to mappings between categories of functors.
 class HFunctor f where
     hmap :: (a ~> b) -> (f a ~> f b)
 
 instance Functor f => HFunctor ((:.:) f) where
     hmap f = Comp1 . fmap f . unComp1
 
+-- | A generalization of 'Monad's to category of endofunctors
+-- (so, a monoid in category of endofunctors over category of endofunctors).
 class HFunctor m => HMonad m where
     hpure :: a ~> m a
     hbind :: (a ~> m b) -> (m a ~> m b)
 
+-- | A generalization of 'Foldable's in spirit of 'HFunctor'.
 class HFoldable f where
     hfoldMap :: Monoid m => (a /> m) -> f a /> m
 
+-- | A generalization of 'Traversable's in spirit of 'HFunctor'.
 class (HFunctor t, HFoldable t) => HTraversable t where
     htraverse :: Applicative f => Klei f a b -> Klei f (t a) (t b)
