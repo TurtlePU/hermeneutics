@@ -1,5 +1,5 @@
 -- |
--- Module      : Hermeneutics.Flavours.SecondOrder
+-- Module      : Hermeneutics.Grammar.SecondOrder
 -- Description : Adapter for working with scoped single-sorted grammars
 --               defined via a 'Bifunctor'.
 -- Copyright   : (c) TurtlePU, 2025
@@ -11,13 +11,13 @@
 -- This module contains an adapter 'SecondOrder' which turns
 -- a scoped single-sorted grammar defined via a 'Bifunctor'
 -- into a scoped multi-sorted 'HFunctor' that generates the same language.
-module Hermeneutics.Flavours.SecondOrder where
+module Hermeneutics.Grammar.SecondOrder where
 
 import Data.Bifoldable (Bifoldable, bifoldMap)
 import Data.Bifunctor (Bifunctor, bimap)
 import Data.Bitraversable (Bitraversable, bitraverse)
 import Data.List.NonEmpty (NonEmpty (..))
-import Hermeneutics.Flavours (HFoldable (..), HFunctor (..), HTraversable (..))
+import Hermeneutics.Grammar (HFoldable (..), HFunctor (..), HTraversable (..))
 
 -- | Given a 'Bifunctor' @b@ (a second-order single-sorted grammar),
 -- a @'SecondOrder' b@ is an 'HFunctor' (scoped manysorted grammar)

@@ -3,7 +3,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 -- |
--- Module      : Hermeneutics.Flavours.NthOrder
+-- Module      : Hermeneutics.Grammar.NthOrder
 -- Description : Adapter for working with scoped single-sorted grammars.
 -- Copyright   : (c) TurtlePU, 2025
 -- License     : BSD-3
@@ -14,12 +14,12 @@
 -- This module contains definition of 'DFunctor' class useful for defining
 -- single-sorted grammars with bindings and an adapter to turn a 'DFunctor'
 -- into an 'HFunctor' defining the same grammar.
-module Hermeneutics.Flavours.NthOrder where
+module Hermeneutics.Grammar.NthOrder where
 
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics
 import GHC.TypeNats (type (-))
-import Hermeneutics.Flavours
+import Hermeneutics.Grammar
 
 -- | 'DFunctor' is a "functor"
 -- from "category" of functors of kind @k -> Type@ into Hask.

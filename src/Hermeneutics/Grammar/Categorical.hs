@@ -1,7 +1,7 @@
-module Hermeneutics.Flavours.Categorical where
+module Hermeneutics.Grammar.Categorical where
 
 import Data.List.NonEmpty (NonEmpty (..))
-import Hermeneutics.Flavours
+import Hermeneutics.Grammar
 
 type c ~~> d = forall i j. c i j -> d i j
 

@@ -1,6 +1,6 @@
 -- |
--- Module      : Hermeneutics.Flavours.ManySorted
--- Description : Adapter for working with many-sorted algebraic grammars.
+-- Module      : Hermeneutics.Grammar.Algebraic
+-- Description : Adapter for working with many-sorted unscoped grammars.
 -- Copyright   : (c) TurtlePU, 2025
 -- License     : BSD-3
 -- Maintainer  : sokolov.p64@gmail.com
@@ -9,10 +9,10 @@
 --
 -- This module contains an adapter to lift a non-scoped many-sorted grammar
 -- (also called "algebraic" here) into scoped many-sorted grammar.
-module Hermeneutics.Flavours.ManySorted where
+module Hermeneutics.Grammar.Algebraic where
 
 import Data.List.NonEmpty (NonEmpty (..))
-import Hermeneutics.Flavours (HFoldable (..), HFunctor (..), HTraversable (..))
+import Hermeneutics.Grammar (HFoldable (..), HFunctor (..), HTraversable (..))
 
 -- | @'SApp' v@ lowers @v@ from general term provider
 -- to the one used in algebraic grammars.

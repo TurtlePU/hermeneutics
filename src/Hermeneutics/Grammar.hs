@@ -1,5 +1,5 @@
 -- |
--- Module      : Hermeneutics.Flavours
+-- Module      : Hermeneutics.Grammar
 -- Description : Definition of grammars as higher-order functors. Start here!
 -- Copyright   : (c) TurtlePU, 2025
 -- License     : BSD-3
@@ -176,7 +176,7 @@
 --      (NonEmpty s -> Type) -> (s -> Type)
 -- @
 --
--- But there are a lot of different more specialized /flavours/ of grammars as
+-- But there are a lot of different more specialized flavours of grammars as
 -- well, each presentable with their own kind of functors. Is there a way to
 -- bind them all together?
 --
@@ -187,16 +187,16 @@
 -- which lift special-case functors to their most general counterpart. A short
 -- table of contents to choose your favourite flavour:
 --
--- +---------------+-------------------------------------+-------------------------------------+
--- | # of bindings |                1 sort               |               Many sorts            |
--- +===============+=====================================+=====================================+
--- |  No bindings  | "Hermeneutics.Flavours.FirstOrder"  | "Hermeneutics.Flavours.ManySorted"  |
--- +---------------+-------------------------------------+-------------------------------------+
--- |  1 at a time  | "Hermeneutics.Flavours.SecondOrder" | "Hermeneutics.Flavours.Categorical" |
--- +---------------+-------------------------------------+-------------------------------------+
--- |  n at a time  |  "Hermeneutics.Flavours.NthOrder"   |             This module             |
--- +---------------+-------------------------------------+-------------------------------------+
-module Hermeneutics.Flavours where
+-- +---------------+------------------------------------+------------------------------------+
+-- | # of bindings |                1 sort              |              Many sorts            |
+-- +===============+====================================+====================================+
+-- |  No bindings  | "Hermeneutics.Grammar.Functorial"  |  "Hermeneutics.Grammar.Algebraic"  |
+-- +---------------+------------------------------------+------------------------------------+
+-- |  1 at a time  | "Hermeneutics.Grammar.SecondOrder" | "Hermeneutics.Grammar.Categorical" |
+-- +---------------+------------------------------------+------------------------------------+
+-- |  n at a time  |  "Hermeneutics.Grammar.NthOrder"   |             This module            |
+-- +---------------+------------------------------------+------------------------------------+
+module Hermeneutics.Grammar where
 
 import GHC.Generics ((:.:) (..))
 
