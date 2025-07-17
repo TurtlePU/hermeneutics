@@ -153,8 +153,9 @@ type family Repeat s n where
 -- used in 'DFunctor's, using @s@ as a single sort used throughout.
 newtype NApp v s n = MkNApp { runNApp :: v (s :| Repeat s n) }
 
--- | Given a 'DFunctor' @g@, @'NthOrder' g@ is an 'HFunctor'
--- defining the same grammar.
+-- | Given a 'DFunctor' @g@ (single-sorted scoped grammar),
+-- @'NthOrder' g@ is an 'HFunctor' (manysorted scoped grammar)
+-- generating the same language.
 newtype NthOrder g v s = MkNthOrder { runNthOrder :: g (NApp v s) }
 
 instance DFunctor g => HFunctor (NthOrder g) where

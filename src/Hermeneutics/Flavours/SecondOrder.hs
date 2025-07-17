@@ -19,8 +19,9 @@ import Data.Bitraversable (Bitraversable, bitraverse)
 import Data.List.NonEmpty (NonEmpty (..))
 import Hermeneutics.Flavours (HFoldable (..), HFunctor (..), HTraversable (..))
 
--- | Given a 'Bifunctor' @b@, a @'SecondOrder' b@ is an 'HFunctor' generating
--- the same language.
+-- | Given a 'Bifunctor' @b@ (a second-order single-sorted grammar),
+-- a @'SecondOrder' b@ is an 'HFunctor' (scoped manysorted grammar)
+-- generating the same language.
 --
 -- In order to derive instances of 'Bifunctor'-like classes, you can use
 -- Template Haskell functions provided in the

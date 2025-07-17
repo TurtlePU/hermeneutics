@@ -19,7 +19,7 @@ import Hermeneutics.Flavours (HFoldable (..), HFunctor (..), HTraversable (..))
 newtype SApp v s = MkSApp { runSApp :: v (s :| '[]) }
 
 -- | Given an algebraic grammar @g@, @'ManySorted' g@ is a scoped grammar
--- defining the same language.
+-- generating the same language.
 newtype ManySorted g v s = MSorted { runMSorted :: g (SApp v) s }
 
 instance HFunctor g => HFunctor (ManySorted g) where
