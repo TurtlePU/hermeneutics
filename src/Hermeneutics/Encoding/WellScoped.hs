@@ -1,37 +1,59 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE QuantifiedConstraints #-}
 
+-- |
+-- Module      : Hermeneutics.Encoding.WellScoped
+-- Description : A language of well-scoped terms in a given grammar.
+-- Copyright   : (c) TurtlePU, 2025
+-- License     : BSD-3
+-- Maintainer  : sokolov.p64@gmail.com
+-- Stability   : experimental
+-- Portability : portable
+--
+-- This module contains a definition of a type of well-scoped terms generated
+-- from the given many-sorted grammar with bindings (consult
+-- "Hermeneutics.Grammar" for more info on what this means).
 module Hermeneutics.Encoding.WellScoped where
 
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics ((:+:) (..))
-import Hermeneutics.Flavours
+import Hermeneutics.Grammar
 
+-- | Each instance of @'In' ts t@
+-- is a witness of @t@ as an element in list @ts@.
 data In ts t where
     Here :: In (t : ts) t
     There :: In ts t -> In (u : ts) t
 
+-- | There are no elements in an empty list,
+-- therefore such evidence can be discarded.
 in0 :: (v ~> w) -> (In '[] :+: v) ~> w
 in0 _ (L1 x) = case x of
 in0 f (R1 x) = f x
 
+-- | If @'Or' t v s@, then either @t ~ s@, or @v s@ holds.
 data Or t v s where
     This :: Or t v t
     That :: v s -> Or t v s
 
+-- | If @'In' (t : ts) s@, then either @t ~ s@, or @'In' ts s@.
 in1 :: (In (t : ts) :+: v) ~> (In ts :+: Or t v)
 in1 (L1 Here)      = R1 This
 in1 (L1 (There i)) = L1 i
 in1 (R1 v)         = R1 (That v)
 
+-- | A term-level reification of type-level list length.
 data Counter ts where
     CZ :: Counter '[]
     CS :: Counter ts -> Counter (s : ts)
 
+-- | @'Ext' m v (s :| ts)@ is a term @m@ of sort @s@
+-- in scope @v@ extended with variables of sorts @ts@.
 data Ext m v ts where
     MkExt :: Counter ts -> m (In ts :+: v) s -> Ext m v (s :| ts)
 
--- | Multisorted grammars with bindings
+-- | @'Scoped' g v s@ is a type of terms of sort @s@ in scope @v@ generated from
+-- the grammar @g@.
 data Scoped g v s = Leaf (v s) | Node (g (Ext (Scoped g) v) s)
 
 instance HFunctor g => HFunctor (Scoped g) where
@@ -62,10 +84,15 @@ instance HTraversable g => HTraversable (Scoped g) where
             R1 v -> R1 <$> f v
         ) s) g
 
+-- | @'NAry' w ts@ is a type of N-ary functions
+-- where sorts of arguments and result are recorded in @ts@
+-- and presentation of sorts as types is given as @w@.
 data NAry w ts where
     ZAry :: w s -> NAry w (s :| '[])
     SAry :: (w s -> NAry w (t :| ts)) -> NAry w (t :| s : ts)
 
+-- | Given an evaluation of variables in scope and a way to evaluate grammar,
+-- evaluates the term.
 evalScoped ::
     forall g v w. HFunctor g => (v ~> w) -> (g (NAry w) ~> w) -> Scoped g v ~> w
 evalScoped f _ (Leaf v) = f v

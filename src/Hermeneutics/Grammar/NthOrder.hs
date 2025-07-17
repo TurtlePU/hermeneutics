@@ -2,13 +2,41 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hermeneutics.Flavours.NthOrder where
+-- |
+-- Module      : Hermeneutics.Grammar.NthOrder
+-- Description : Adapter for working with scoped single-sorted grammars.
+-- Copyright   : (c) TurtlePU, 2025
+-- License     : BSD-3
+-- Maintainer  : sokolov.p64@gmail.com
+-- Stability   : experimental
+-- Portability : portable
+--
+-- This module contains definition of 'DFunctor' class useful for defining
+-- single-sorted grammars with bindings and an adapter to turn a 'DFunctor'
+-- into an 'HFunctor' defining the same grammar.
+module Hermeneutics.Grammar.NthOrder where
 
 import Data.List.NonEmpty (NonEmpty (..))
 import GHC.Generics
 import GHC.TypeNats (type (-))
-import Hermeneutics.Flavours
+import Hermeneutics.Grammar
 
+-- | 'DFunctor' is a "functor"
+-- from "category" of functors of kind @k -> Type@ into Hask.
+--
+-- While being more general (see its usage in
+-- [yaya](https://hackage.haskell.org/package/yaya)), we are particularly
+-- interested in the case when @k ~ Natural@ since such functors define a
+-- single-sorted grammar with arbitrary (finite) order of bindings:
+-- if a 'DFunctor' @g@ is given a functor @v@, usages like @v n@ denote
+-- a subterm with @n@ new bindings.
+--
+-- Deriving via 'Generic1' is available. See ':&:' for details.
+--
+-- Laws are usual functor laws:
+--
+-- [Identity] @'dmap' 'id' == 'id'@
+-- [Composition] @'dmap' (f '.' g) == 'dmap' f '.' 'dmap' g@
 class DFunctor g where
     dmap :: (a ~> b) -> g a -> g b
     default dmap :: (Generic1 g, DFunctor (Rep1 g)) => (a ~> b) -> g a -> g b
@@ -34,6 +62,9 @@ instance DFunctor g => DFunctor (Rec1 g)
 
 --------------------------------------------------------------------------------
 
+-- | Generalization of 'Foldable' to 'DFunctor's.
+--
+-- Deriving via 'Generic1' is available, see ':&:' for details.
 class DFoldable g where
     dfoldMap :: Monoid m => (a /> m) -> g a -> m
     default dfoldMap ::
@@ -60,6 +91,9 @@ instance DFoldable g => DFoldable (Rec1 g)
 
 --------------------------------------------------------------------------------
 
+-- | Generalization of 'Traversable' to 'DFunctor's.
+--
+-- Deriving via 'Generic1' is available, see ':&:' for details.
 class (DFunctor g, DFoldable g) => DTraversable g where
     dtraverse :: Applicative f => Klei f a b -> g a -> f (g b)
     default dtraverse ::
@@ -87,6 +121,20 @@ instance DTraversable g => DTraversable (Rec1 g)
 
 --------------------------------------------------------------------------------
 
+-- | A helpful newtype for 'DFunctor' family of classes via 'Generic1'.
+--
+-- Due to the limitations of 'Generic1' deriving, GHC cannot derive 'Generic1'
+-- for grammars like this:
+--
+-- >>> data ManualLC v = MApp (v 0) (v 0) | MAbs (v 1)
+--
+-- However, using the ':&:' newtype, derivation would work just fine:
+--
+-- >>> data DerivableLC v = DApp (0 :&: v) (0 :&: v) | DAbs (1 :&: v)
+-- >>>     deriving Generic1
+-- >>> instance DFunctor DerivableLC
+-- >>> instance DFoldable DerivableLC
+-- >>> instance DTraversable DerivableLC
 newtype (:&:) x f = Apply { runApply :: f x }
 
 instance DFunctor ((:&:) x) where dmap f = Apply . f . runApply
@@ -95,12 +143,19 @@ instance DTraversable ((:&:) x) where dtraverse f = fmap Apply . f . runApply
 
 --------------------------------------------------------------------------------
 
+-- | @'Repeat' s n@ creates a type-level list
+-- consisting of @s@ of length exactly @n@.
 type family Repeat s n where
     Repeat _ 0 = '[]
     Repeat s n = s : Repeat s (n - 1)
 
+-- | @'NApp' v s@ lowers @v@ from general term provider to the one
+-- used in 'DFunctor's, using @s@ as a single sort used throughout.
 newtype NApp v s n = MkNApp { runNApp :: v (s :| Repeat s n) }
 
+-- | Given a 'DFunctor' @g@ (single-sorted scoped grammar),
+-- @'NthOrder' g@ is an 'HFunctor' (manysorted scoped grammar)
+-- generating the same language.
 newtype NthOrder g v s = MkNthOrder { runNthOrder :: g (NApp v s) }
 
 instance DFunctor g => HFunctor (NthOrder g) where
