@@ -12,9 +12,9 @@
 -- "Hermeneutics.Grammar" for more info on what this means).
 module Hermeneutics.Encoding.Value where
 
-import Hermeneutics.Encoding.WellScoped (NAry, Scoped, evalScoped)
 import Data.Functor.Const (Const (..))
 import Data.Void (Void, absurd)
+import Hermeneutics.Encoding.WellScoped (NAry, Scoped, evalScoped)
 import Hermeneutics.Grammar (HFunctor)
 
 -- | Type of "values" generated from the given many-sorted grammar with bindings.
