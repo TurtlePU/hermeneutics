@@ -42,6 +42,7 @@ library
     import:          stanzas
     exposed-modules:
         Hermeneutics.Encoding.DeBruijn
+        Hermeneutics.Encoding.NbE
         Hermeneutics.Encoding.Source
         Hermeneutics.Encoding.Value
         Hermeneutics.Encoding.WellScoped
