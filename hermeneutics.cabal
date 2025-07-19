@@ -41,6 +41,7 @@ common stanzas
 library
     import:          stanzas
     exposed-modules:
+        Hermeneutics.Encoding.Source
         Hermeneutics.Encoding.Value
         Hermeneutics.Encoding.WellScoped
         Hermeneutics.Grammar
