@@ -1,17 +1,19 @@
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Hermeneutics.Parser where
 
-import Data.Map (Map)
-import Data.Set (Set)
-import Data.List.NonEmpty (NonEmpty)
-import Data.Maybe (mapMaybe, listToMaybe)
 import Data.Foldable (traverse_)
-import qualified Data.Graph as G
-import qualified Data.Map as M
-import Control.Monad ((<=<))
-import qualified Data.Set as S
-import qualified Data.List.NonEmpty as N
+import Data.Graph qualified as G
+import Data.List.NonEmpty (NonEmpty)
+import Data.List.NonEmpty qualified as N
+import Data.Map (Map)
+import Data.Map qualified as M
+import Data.Maybe (fromMaybe, mapMaybe)
+import Data.Recursive.DualBool qualified as RDB
+import Data.Set (Set)
+import Data.Set qualified as S
+import qualified Data.Recursive.Set as RS
 
 newtype Production s t = Production { pSeq :: [Either s t] }
   deriving (Eq, Ord)
@@ -47,38 +49,36 @@ instance Ord t => Num (First t) where
 parseTableLL1 :: (Ord s, Ord t) => CFG s t -> Either (NotLL1 s t) (LL1Table s t)
 parseTableLL1 (CFG root rules) = do
 
-  let firstIfLeft = either pure (const Nothing) <=< listToMaybe
+  let hasEps = RDB.or . map (RDB.and . map atomHasEps . pSeq) <$> rules
+      atomHasEps a = case a of
+        Left s  -> fromMaybe RDB.false (hasEps M.!? s)
+        Right _ -> RDB.false
+
+  let epsChildren (pSeq -> as) =
+        mapMaybe (either Just (const Nothing) . fst)
+        $ takeWhile snd
+        $ zip as (True : map (RDB.get . atomHasEps) as)
+
   traverse_ (Left . LeftRecursive)
     $ N.nonEmpty
     $ mapMaybe (\case G.NECyclicSCC vs -> Just (Cycle vs); _ -> Nothing)
     $ G.stronglyConnComp
-    $ map (uncurry \s -> (s, s,) . mapMaybe (firstIfLeft . pSeq)) -- account for eps-transitions as well
+    $ map (uncurry \s -> (s, s,) . concatMap epsChildren)
     $ M.toList rules
 
   let firstNT = sum . map N.head <$> firstPs
       firstPs = map (N.scanr ((*) . toFirst) 1 . pSeq) <$> rules
       toFirst = either (sum . flip M.lookup firstNT) singleFirst
 
-  let populate fi = \case
-        G.AcyclicSCC (fs, s, ss') ->
-          M.insert s (fs <> S.unions [ fi M.! s' | s' <- ss' ]) fi
-        G.NECyclicSCC ns ->
-          let (fs, ss, ss') =
-                foldMap (\(f, s, s') -> (f, S.singleton s, S.fromList s')) ns
-              fs' = fs <> S.unions [ fi M.! s' | s' <- S.toList (ss' S.\\ ss) ]
-           in M.fromSet (const fs') ss <> fi
-      follows =
-        foldl' populate M.empty
-        $ G.stronglyConnCompR
-        $ map (\(s, (f, ss')) -> (f, s, S.toList ss'))
-        $ M.assocs
-        $ M.fromListWith (<>)
+  let follows0 = M.fromListWith (<>)
         $ (root, (S.singleton Nothing, S.empty)) : [
           (s, (S.mapMonotonic Just t, S.fromList [s' | e]))
           | (ps, (s', fss)) <- zip (M.elems rules) (M.assocs firstPs)
           , (p, fs) <- zip ps fss
           , (Left s, First t e) <- zip (pSeq p) (N.tail fs)
         ]
+      followsR = (\(f, ss) -> RS.mk f `RS.union` followssR ss) <$> follows0
+      followssR = RS.unions . mapMaybe (followsR M.!?) . S.toList
 
   fmap LL1Table
     $ M.traverseWithKey (\(s, t) -> \case p N.:| [] -> Right p
@@ -88,5 +88,5 @@ parseTableLL1 (CFG root rules) = do
       | (ps, (s, fss)) <- zip (M.elems rules) (M.assocs firstPs)
       , (p, First ts e) <- zip ps (map N.head fss)
       , t <- S.toList (S.mapMonotonic Just ts
-                    <> if e then follows M.! s else S.empty)
+                    <> if e then RS.get (followsR M.! s) else S.empty)
       ]
