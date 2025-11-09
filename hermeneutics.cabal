@@ -56,7 +56,7 @@ library
         Hermeneutics.Parser.Generator
     -- other-modules:
     build-depends:
-        base  ^>=4.21.0.0,
+        base >=4.21 && <5,
         containers ^>=0.7,
         rec-def  ^>=0.2.2,
     hs-source-dirs:  src
