@@ -31,16 +31,16 @@ import Data.Set qualified as S
 -- | A single @'Production' s t i@ in a 'CFG' (context-free grammar) is a
 -- sequence 'pSeq' of nonterminals @s@ and terminals @t@.
 -- Additional information of type @i@ can be stored in a field 'pInfo'.
-data Production s t i = Production { pSeq :: [Either s t], pInfo :: i }
+data Production s t i = MkProduction { pSeq :: [Either s t], pInfo :: i }
 
 -- | A @'CFG' s t i@ (context-free grammar) is a mapping of 'cfgRules' where
 -- each rule associates a nonterminal @s@ with its possible productions
 -- typed as @'Production' s t i@.
 -- 'cfgRoot' nonterminal corresponds to the language recognized by the grammar.
-data CFG s t i = CFG { cfgRoot :: s, cfgRules :: Map s [Production s t i] }
+data CFG s t i = MkCFG { cfgRoot :: s, cfgRules :: Map s [Production s t i] }
 
 -- | A @'Cycle' s@ is a non-empty list of 'vertices' @s@.
-newtype Cycle s = Cycle { vertices :: NonEmpty s }
+newtype Cycle s = MkCycle { vertices :: NonEmpty s }
 
 -- | @'NotLL1' s t i@ is an enumeration of possible reasons
 -- why a particular @'CFG' s t i@ (context-free-grammar)
@@ -53,11 +53,15 @@ data NotLL1 s t i
   -- at a given nonterminal state @s@ and input symbol @t@ (or end of input).
   | Ambiguous s (Maybe t) (NonEmpty (Production s t i))
 
+-- | LL(1) parser can take three possible actions on input:
+-- apply a production rule, enter recovery mode or skip unknown token.
+data Action s t i = Apply (Production s t i) | Recover
+
 -- | A jump table for LL(1) grammar @'LL1Table' s t i@ is a mapping that tells
--- which @'Production' s t i@ to apply at each possible combination
+-- which @'Action' s t i@ to take at each possible combination
 -- of nonterminal state @s@ and input symbol @t@ (or end of input).
-newtype LL1Table s t i = LL1Table
-  { tableLL1 :: Map (s, Maybe t) (Production s t i) }
+newtype LL1Table s t i = MkLL1Table
+  { tableLL1 :: Map (s, Maybe t) (Action s t i) }
 
 -- | A @'First' t@ set of an arbitrary production (/p/)
 -- is a set of terminals @t@ which might start a sentence recognized by (/p/).
@@ -73,29 +77,32 @@ newtype LL1Table s t i = LL1Table
 -- It was
 -- [noted by Swierstra and Duponcheel](https://www.cs.tufts.edu/comp/150FP/archive/doaitse-swierstra/error-correcting.pdf)
 -- that 'First' sets have two basic operations:
+--
 -- * "alt", joining 'First' sets of two productions of a same nonterminal;
 -- * "seq", computing a 'First' set of concatenation of two productions.
 --
 -- If properly indexed by the resulting nonterminal as a type, @'First' t@ would
 -- form a 'Control.Applicative.Alternative' functor under these operations,
--- but in our case we just give it a 'Num' instance with the following properties:
+-- but here we just give it a 'Num' instance with the following properties:
+--
 -- * @('First' t, '+', 0)@ is an abelian monoid (where '+' is "alt");
 -- * @('First' t, '*', 1)@ is a monoid (where '*' is "seq");
 -- * Multiplication ditributes over addition;
 -- * @0 * ff = 0@;
 -- * @(ts, _) * 0 = (ts, False)@ where @ts@ is a set of terminals.
+--
 -- So it's /almost/ like a semiring, but multiplication is a bit more eager.
-data First t = First { firstTerms :: Set t, firstEps :: RDualBool }
+data First t = MkFirst { firstTerms :: Set t, firstEps :: RDualBool }
 
 -- | @'First' t@ might contain a single terminal @t@.
 singleFirst :: t -> First t
-singleFirst = (`First` RDB.false) . S.singleton
+singleFirst = (`MkFirst` RDB.false) . S.singleton
 
 instance Ord t => Num (First t) where
-  First t e + First t' e' = First (t <> t') (e RDB.|| e')
-  First t e * First t' e' =
-    First (t <> if RDB.get e then t' else S.empty) (e RDB.&& e')
-  fromInteger = First S.empty . RDB.mk . (> 0)
+  MkFirst t e + MkFirst t' e' = MkFirst (t <> t') (e RDB.|| e')
+  MkFirst t e * MkFirst t' e' =
+    MkFirst (t <> if RDB.get e then t' else S.empty) (e RDB.&& e')
+  fromInteger = MkFirst S.empty . RDB.mk . (> 0)
   negate = id
   abs = id
   signum = const 1
@@ -107,7 +114,7 @@ instance Ord t => Num (First t) where
 -- or 'Right' containing an efficient jump table for @g@.
 parseTableLL1 ::
   (Ord s, Ord t) => CFG s t i -> Either (NotLL1 s t i) (LL1Table s t i)
-parseTableLL1 (CFG root rules) = do
+parseTableLL1 (MkCFG root rules) = do
 
   let firstNT = sum . map N.head <$> firstPs
       firstPs = map (N.scanr ((*) . toFirst) 1 . pSeq) <$> rules
@@ -123,7 +130,7 @@ parseTableLL1 (CFG root rules) = do
 
   traverse_ (Left . LeftRecursive)
     $ N.nonEmpty
-    $ mapMaybe (\case G.NECyclicSCC vs -> Just (Cycle vs); _ -> Nothing)
+    $ mapMaybe (\case G.NECyclicSCC vs -> Just (MkCycle vs); _ -> Nothing)
     $ G.stronglyConnComp
     $ map (uncurry \s -> (s, s,) . concatMap epsChildren)
     $ M.toList rules
@@ -133,17 +140,36 @@ parseTableLL1 (CFG root rules) = do
           (s, RS.mk (S.mapMonotonic Just t) `RS.union` f')
           | (ps, (s', fss)) <- zip (M.elems rules) (M.assocs firstPs)
           , (p, fs) <- zip ps fss
-          , (Left s, First t e) <- zip (pSeq p) (N.tail fs)
+          , (Left s, MkFirst t e) <- zip (pSeq p) (N.tail fs)
           , let f' = fromMaybe RS.empty (guard (RDB.get e) >> follows M.!? s')
         ]
 
-  fmap LL1Table
-    $ M.traverseWithKey (\(s, t) -> \case p N.:| [] -> Right p
-                                          ps -> Left (Ambiguous s t ps))
+  let accumR (Left ((firstNT M.!?) -> Just (MkFirst f _))) = RS.union (RS.mk f)
+      accumR (Right t)                                     = RS.insert t
+      accumR _                                             = id
+      recovery = M.fromListWith RS.union
+        [ (s, r)
+        | (s', ps) <- M.assocs rules
+        , p <- map pSeq ps
+        , let rs = N.scanr accumR (fromMaybe RS.empty $ recovery M.!? s') p
+        , (Left s, r) <- zip p (N.tail rs)
+        ]
+      recoveries =
+        [ ((s, Just t), [])
+        | (s, ts) <- M.assocs recovery
+        , t <- S.toList (RS.get ts)
+        ]
+
+  fmap MkLL1Table
+    $ M.traverseWithKey (\(s, t) -> \case
+        [] -> Right Recover
+        [p] -> Right (Apply p)
+        (p : ps) -> Left $ Ambiguous s t (p N.:| ps)
+      )
     $ M.fromListWith (<>)
-    $ [ ((s, t), N.singleton p)
+    $ [ ((s, t), [p])
       | (ps, (s, fss)) <- zip (M.elems rules) (M.assocs firstPs)
-      , (p, First ts e) <- zip ps (map N.head fss)
+      , (p, MkFirst ts e) <- zip ps (map N.head fss)
       , t <- S.toList (S.mapMonotonic Just ts
                     <> if RDB.get e then RS.get (follows M.! s) else S.empty)
-      ]
+      ] ++ recoveries
