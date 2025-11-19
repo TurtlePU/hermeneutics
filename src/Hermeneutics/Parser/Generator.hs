@@ -19,8 +19,8 @@ import Data.Foldable (traverse_)
 import Data.Graph qualified as G
 import Data.List.NonEmpty (NonEmpty)
 import Data.List.NonEmpty qualified as N
-import Data.Map (Map)
-import Data.Map qualified as M
+import Data.Map.Lazy (Map)
+import Data.Map.Lazy qualified as M
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Recursive.DualBool (RDualBool)
 import Data.Recursive.DualBool qualified as RDB
@@ -60,8 +60,8 @@ data Action s t i = Apply (Production s t i) | Recover
 -- | A jump table for LL(1) grammar @'LL1Table' s t i@ is a mapping that tells
 -- which @'Action' s t i@ to take at each possible combination
 -- of nonterminal state @s@ and input symbol @t@ (or end of input).
-newtype LL1Table s t i = MkLL1Table
-  { tableLL1 :: Map (s, Maybe t) (Action s t i) }
+data LL1Table s t i = MkLL1Table
+  { tableRoot :: s, tableLL1 :: Map (s, Maybe t) (Action s t i) }
 
 -- | A @'First' t@ set of an arbitrary production (/p/)
 -- is a set of terminals @t@ which might start a sentence recognized by (/p/).
@@ -99,8 +99,8 @@ singleFirst :: t -> First t
 singleFirst = (`MkFirst` RDB.false) . S.singleton
 
 instance Ord t => Num (First t) where
-  MkFirst t e + MkFirst t' e' = MkFirst (t <> t') (e RDB.|| e')
-  MkFirst t e * MkFirst t' e' =
+  ~(MkFirst t e) + ~(MkFirst t' e') = MkFirst (t <> t') (e RDB.|| e')
+  ~(MkFirst t e) * ~(MkFirst t' e') =
     MkFirst (t <> if RDB.get e then t' else S.empty) (e RDB.&& e')
   fromInteger = MkFirst S.empty . RDB.mk . (> 0)
   negate = id
@@ -160,7 +160,7 @@ parseTableLL1 (MkCFG root rules) = do
         , t <- S.toList (RS.get ts)
         ]
 
-  fmap MkLL1Table
+  fmap (MkLL1Table root)
     $ M.traverseWithKey (\(s, t) -> \case
         [] -> Right Recover
         [p] -> Right (Apply p)
