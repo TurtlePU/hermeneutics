@@ -21,7 +21,7 @@ import Data.List.NonEmpty (NonEmpty)
 import Data.List.NonEmpty qualified as N
 import Data.Map.Lazy (Map)
 import Data.Map.Lazy qualified as M
-import Data.Maybe (fromMaybe, mapMaybe)
+import Data.Maybe (fromMaybe, mapMaybe, catMaybes)
 import Data.Recursive.DualBool (RDualBool)
 import Data.Recursive.DualBool qualified as RDB
 import Data.Recursive.Set qualified as RS
@@ -32,6 +32,7 @@ import Data.Set qualified as S
 -- sequence 'pSeq' of nonterminals @s@ and terminals @t@.
 -- Additional information of type @i@ can be stored in a field 'pInfo'.
 data Production s t i = MkProduction { pSeq :: [Either s t], pInfo :: i }
+  deriving Show
 
 -- | A @'CFG' s t i@ (context-free grammar) is a mapping of 'cfgRules' where
 -- each rule associates a nonterminal @s@ with its possible productions
@@ -40,7 +41,7 @@ data Production s t i = MkProduction { pSeq :: [Either s t], pInfo :: i }
 data CFG s t i = MkCFG { cfgRoot :: s, cfgRules :: Map s [Production s t i] }
 
 -- | A @'Cycle' s@ is a non-empty list of 'vertices' @s@.
-newtype Cycle s = MkCycle { vertices :: NonEmpty s }
+newtype Cycle s = MkCycle { vertices :: NonEmpty s } deriving Show
 
 -- | @'NotLL1' s t i@ is an enumeration of possible reasons
 -- why a particular @'CFG' s t i@ (context-free-grammar)
@@ -52,16 +53,17 @@ data NotLL1 s t i
   -- | Grammar is ambiguous if there are many possible productions to apply
   -- at a given nonterminal state @s@ and input symbol @t@ (or end of input).
   | Ambiguous s (Maybe t) (NonEmpty (Production s t i))
+  deriving Show
 
 -- | LL(1) parser can take three possible actions on input:
 -- apply a production rule, enter recovery mode or skip unknown token.
-data Action s t i = Apply (Production s t i) | Recover
+data Action s t i = Apply (Production s t i) | Recover deriving Show
 
 -- | A jump table for LL(1) grammar @'LL1Table' s t i@ is a mapping that tells
 -- which @'Action' s t i@ to take at each possible combination
 -- of nonterminal state @s@ and input symbol @t@ (or end of input).
 data LL1Table s t i = MkLL1Table
-  { tableRoot :: s, tableLL1 :: Map (s, Maybe t) (Action s t i) }
+  { tableRoot :: s, tableLL1 :: Map (s, Maybe t) (Action s t i) } deriving Show
 
 -- | A @'First' t@ set of an arbitrary production (/p/)
 -- is a set of terminals @t@ which might start a sentence recognized by (/p/).
@@ -144,19 +146,13 @@ parseTableLL1 (MkCFG root rules) = do
           , let f' = fromMaybe RS.empty (guard (RDB.get e) >> follows M.!? s')
         ]
 
-  let accumR (Left ((firstNT M.!?) -> Just (MkFirst f _))) = RS.union (RS.mk f)
-      accumR (Right t)                                     = RS.insert t
-      accumR _                                             = id
-      recovery = M.fromListWith RS.union
-        [ (s, r)
-        | (s', ps) <- M.assocs rules
-        , p <- map pSeq ps
-        , let rs = N.scanr accumR (fromMaybe RS.empty $ recovery M.!? s') p
-        , (Left s, r) <- zip p (N.tail rs)
+  let recovery = M.fromListWith RS.union
+        [ (s, r) | (s', ps) <- M.assocs rules
+        , let r = RS.unions $ catMaybes [recovery M.!? s', follows M.!? s']
+        , p <- map pSeq ps, Left s <- p
         ]
       recoveries =
-        [ ((s, Just t), [])
-        | (s, ts) <- M.assocs recovery
+        [ ((s, t), []) | (s, ts) <- M.assocs recovery
         , t <- S.toList (RS.get ts)
         ]
 
