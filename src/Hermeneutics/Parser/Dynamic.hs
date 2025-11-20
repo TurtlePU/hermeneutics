@@ -25,12 +25,22 @@ import Data.Maybe (isJust, listToMaybe)
 import Data.Traversable (for)
 import Hermeneutics.Parser.Generator
 
+-- | During LL(1) parsing, error recovery might either:
+--
+-- * Skip unrecognized ('Unexpected') tokens in a stream;
+-- * Or "insert" missing tokens into stream ('Inserted').
 data ErrorTokenKind = Unexpected | Inserted
 
+-- | Result of dynamically typed parsing is a 'DynamicParseTree'.
 data DynamicParseTree s t i
+  -- | Leaves of a dynamic parse tree are individual tokens (or error tokens).
   = Terminal (Either (ErrorTokenKind, t) t)
+  -- | Nodes of a dynamic parse tree are applications of rules
+  -- (or error nonterminals).
   | NonTerminal (Either s i) [DynamicParseTree s t i]
 
+-- | Given an efficient jump table and a token stream,
+-- build the corresponding parse tree and return remaining tokens, if any.
 parseDynamicLL1 ::
   (Ord s, Ord t) => LL1Table s t i -> [t] -> (DynamicParseTree s t i, [t])
 parseDynamicLL1 (MkLL1Table root table) = runState (go root)
