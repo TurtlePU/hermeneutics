@@ -15,13 +15,15 @@
 module Hermeneutics.Parser.Generator where
 
 import Control.Monad (guard)
-import Data.Foldable (traverse_)
+import Data.Containers.ListUtils (nubOrd)
+import Data.Either (partitionEithers)
+import Data.Foldable (toList, traverse_)
 import Data.Graph qualified as G
 import Data.List.NonEmpty (NonEmpty)
 import Data.List.NonEmpty qualified as N
 import Data.Map.Lazy (Map)
 import Data.Map.Lazy qualified as M
-import Data.Maybe (fromMaybe, mapMaybe, catMaybes)
+import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Recursive.DualBool (RDualBool)
 import Data.Recursive.DualBool qualified as RDB
 import Data.Recursive.Set qualified as RS
@@ -146,15 +148,20 @@ parseTableLL1 (MkCFG root rules) = do
           , let f' = fromMaybe RS.empty (guard (RDB.get e) >> follows M.!? s')
         ]
 
-  let recovery = M.fromListWith RS.union
-        [ (s, r) | (s', ps) <- M.assocs rules
-        , let r = RS.unions $ catMaybes [recovery M.!? s', follows M.!? s']
-        , p <- map pSeq ps, Left s <- p
-        ]
+  let nonterminals = fst . partitionEithers . pSeq
+      (graph, vToNT, ntToV) = G.graphFromEdges
+        $ map (uncurry \s -> (s, s,) . nubOrd . concatMap nonterminals)
+        $ M.toList rules
+      recover pr (G.Node v cs) =
+        let (s, _, _) = vToNT v
+            sr = foldMap RS.get (follows M.!? s) <> pr
+         in M.insert s sr $ foldMap (recover sr) cs
+      recovery = M.unionsWith (<>)
+        $ map (recover S.empty)
+        $ G.dfs graph
+        $ toList (ntToV root)
       recoveries =
-        [ ((s, t), []) | (s, ts) <- M.assocs recovery
-        , t <- S.toList (RS.get ts)
-        ]
+        [ ((s, t), []) | (s, ts) <- M.assocs recovery, t <- S.toList ts ]
 
   fmap (MkLL1Table root)
     $ M.traverseWithKey (\(s, t) -> \case
