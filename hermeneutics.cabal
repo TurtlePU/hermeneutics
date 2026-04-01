@@ -53,8 +53,15 @@ library
         Hermeneutics.Grammar.Functorial
         Hermeneutics.Grammar.NthOrder
         Hermeneutics.Grammar.SecondOrder
+        Hermeneutics.Parser
+        Hermeneutics.Parser.Dynamic
+        Hermeneutics.Parser.Generator
     -- other-modules:
-    build-depends:   base ^>=4.21.0.0
+    build-depends:
+        base   >=4.21 && <5,
+        containers   ^>=0.7,
+        rec-def      ^>=0.2,
+        transformers ^>=0.6,
     hs-source-dirs:  src
 
 test-suite hermeneutics-test
