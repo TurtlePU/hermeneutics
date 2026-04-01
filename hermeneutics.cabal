@@ -53,6 +53,7 @@ library
         Hermeneutics.Grammar.Functorial
         Hermeneutics.Grammar.NthOrder
         Hermeneutics.Grammar.SecondOrder
+        Hermeneutics.Parser
         Hermeneutics.Parser.Dynamic
         Hermeneutics.Parser.Generator
     -- other-modules:
